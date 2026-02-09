@@ -307,7 +307,20 @@
         },
         "deleteSuccess": "Session revoked successfully. It may take up to 10 minutes for the session to fully expire.",
         "noOtherSessions": "No other active sessions."
-      }
+      },
+      "urgency": {
+        "title": "Urgent tasks",
+        "description": "Urgency combines task properties, weights them by their importance to you, and sorts your most important tasks to the top. Enable the Urgency column in any view to sort your most urgent tasks. Get started by creating new weights below.",
+        "property": "Property",
+        "filter": "Filter",
+        "weight": "Weight",
+        "properties": {
+          "due_date": "Due Date",
+          "matches_filter": "Matches Filter",
+          "percent_done": "Progress",
+          "priority": "Priority",
+        },
+      },
     },
     "deletion": {
       "title": "Delete your Vikunja Account",
@@ -1027,6 +1040,7 @@
       "startDate": "Start Date",
       "title": "Title",
       "updated": "Updated",
+      "urgency": "Urgency",
       "doneAt": "Done At"
     },
     "subscription": {

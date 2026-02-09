@@ -153,7 +153,7 @@ func NewEcho() *echo.Echo {
 		log.Debugf("IP extraction: direct (TCP remote address)")
 	}
 
-	e.Logger = log.NewEchoLogger(config.LogEnabled.GetBool(), config.LogHTTP.GetString(), config.LogFormat.GetString())
+	e.Logger = log.NewEchoLogger(config.LogEnabled.GetBool(), config.LogHTTP.GetString(), config.LogLevel.GetString(), config.LogFormat.GetString())
 
 	// First middleware in the chain so every request has an ID — reuses the
 	// X-Request-Id header from a proxy or generates one — and everything
@@ -162,7 +162,7 @@ func NewEcho() *echo.Echo {
 
 	// Logger
 	if config.LogEnabled.GetBool() && config.LogHTTP.GetString() != "off" {
-		httpLogger := log.NewHTTPLogger(config.LogEnabled.GetBool(), config.LogHTTP.GetString(), config.LogFormat.GetString())
+		httpLogger := log.NewHTTPLogger(config.LogEnabled.GetBool(), config.LogHTTP.GetString(), config.LogLevel.GetString(), config.LogFormat.GetString())
 		e.Use(middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
 			LogStatus:    true,
 			LogURI:       true,
@@ -267,7 +267,6 @@ func setupSentry(e *echo.Echo) {
 
 // RegisterRoutes registers all routes for the application
 func RegisterRoutes(e *echo.Echo) {
-
 	if config.ServiceEnableCaldav.GetBool() {
 		// Caldav routes
 		wkg := e.Group("/.well-known")
@@ -463,7 +462,6 @@ func registerAPIRoutesV2(e *echo.Echo, a *echo.Group) {
 }
 
 func registerAPIRoutes(a *echo.Group) {
-
 	// Prevent browsers from caching API responses. Without an explicit
 	// Cache-Control header browsers may heuristically cache JSON responses
 	// which causes stale data (e.g. newly team-shared projects not appearing
@@ -564,6 +562,8 @@ func registerAPIRoutes(a *echo.Group) {
 	u.POST("/settings/avatar", apiv1.ChangeUserAvatarProvider)
 	u.PUT("/settings/avatar/upload", apiv1.UploadAvatar)
 	u.POST("/settings/general", apiv1.UpdateGeneralUserSettings)
+	u.GET("/settings/urgency_weights", apiv1.GetUserUrgencyWeightsSettings)
+	u.POST("/settings/urgency_weights", apiv1.UpdateUserUrgencyWeightsSettings)
 	u.POST("/export/request", apiv1.RequestUserDataExport)
 	u.POST("/export/download", apiv1.DownloadUserDataExport)
 	u.GET("/export", apiv1.GetUserExportStatus)
@@ -1030,7 +1030,6 @@ func registerMigrations(m *echo.Group) {
 }
 
 func registerCalDavRoutes(c *echo.Group) {
-
 	// Basic auth middleware
 	c.Use(middleware.BasicAuth(caldav.BasicAuth))
 

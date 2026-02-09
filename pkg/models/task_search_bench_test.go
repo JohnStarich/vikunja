@@ -17,17 +17,21 @@
 package models
 
 import (
+	"crypto/rand"
 	"fmt"
-	"math/rand"
+	"math/big"
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/user"
 
 	"github.com/jaswdr/faker/v2"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func initBenchmarkConfig() {
@@ -40,11 +44,7 @@ func initBenchmarkConfig() {
 }
 
 // createBenchmarkData creates projects and tasks used for search benchmarks.
-func createBenchmarkData(b *testing.B, needle string) *user.User {
-
-	numberOfProjects := 10
-	numberOfTasks := 2500
-
+func createBenchmarkData(b *testing.B, needle string, numberOfProjects, numberOfTasks uint) *user.User {
 	s := db.NewSession()
 	defer s.Close()
 
@@ -55,6 +55,7 @@ func createBenchmarkData(b *testing.B, needle string) *user.User {
 		b.Fatalf("get user: %v", err)
 	}
 
+	now := time.Now()
 	for i := range numberOfProjects {
 		p := &Project{Title: fmt.Sprintf("Project %d", i), OwnerID: u.ID}
 		if _, err := s.Insert(p); err != nil {
@@ -63,7 +64,7 @@ func createBenchmarkData(b *testing.B, needle string) *user.User {
 
 		for j := range numberOfTasks {
 			title := f.Lorem().Sentence(6)
-			if rand.Intn(100) == 0 { //nolint:gosec
+			if randInt(100) == 0 {
 				title += " " + needle
 			}
 			desc := ""
@@ -85,6 +86,8 @@ func createBenchmarkData(b *testing.B, needle string) *user.User {
 				ProjectID:   p.ID,
 				CreatedByID: u.ID,
 				Index:       int64(j + 1),
+				DueDate:     now.Add(dueDateJitter()),
+				Priority:    randInt(5),
 			}
 			if _, err := s.Insert(t); err != nil {
 				b.Fatalf("insert task: %v", err)
@@ -93,6 +96,25 @@ func createBenchmarkData(b *testing.B, needle string) *user.User {
 	}
 
 	return u
+}
+
+func randInt(maxValue int64) int64 {
+	n, err := rand.Int(rand.Reader, big.NewInt(maxValue))
+	if err != nil {
+		panic(err)
+	}
+	return n.Int64()
+}
+
+func dueDateJitter() time.Duration {
+	const (
+		day     = 24 * time.Hour
+		minDate = -14 * day
+		maxDate = 7 * day
+		width   = maxDate - minDate
+	)
+	jitter := time.Duration(randInt(width.Nanoseconds()))
+	return minDate + jitter
 }
 
 func BenchmarkTaskSearch(b *testing.B) {
@@ -108,44 +130,69 @@ func BenchmarkTaskSearch(b *testing.B) {
 	// Log database configuration
 	b.Logf("Database Type: %s", config.DatabaseType.GetString())
 
-	auth := createBenchmarkData(b, needle)
-
-	// Get all projects for the user
-	s := db.NewSession()
-	projects, _, _, err := getRawProjectsForUser(
-		s,
-		&projectOptions{
-			user: auth,
-			page: -1,
+	for _, tc := range []struct {
+		description   string
+		opts          taskSearchOptions
+		numberOfTasks []uint
+	}{
+		{
+			description: "search",
+			opts: taskSearchOptions{
+				search:             needle,
+				page:               1,
+				perPage:            50,
+				filter:             "done = false",
+				filterTimezone:     "UTC",
+				filterIncludeNulls: false,
+			},
+			numberOfTasks: []uint{2500},
 		},
-	)
-	s.Close()
-	if err != nil {
-		b.Fatalf("get projects: %v", err)
-	}
+		{
+			description: "sort by urgency",
+			opts: taskSearchOptions{
+				page:    1,
+				perPage: 50,
+				sortby: []*sortParam{
+					{
+						sortBy:  taskVirtualPropertyUrgency,
+						orderBy: orderDescending,
+					},
+				},
+			},
+			numberOfTasks: []uint{100, 1000, 10000, 100000},
+		},
+	} {
+		b.Run(tc.description, func(b *testing.B) {
+			if tc.opts.search != "" && config.DatabaseType.GetString() == "sqlite" {
+				b.Skip("Search bench not supported on sqlite")
+			}
 
-	// Create search options
-	opts := &taskSearchOptions{
-		search:             needle,
-		page:               1,
-		perPage:            50,
-		filter:             "done = false",
-		filterTimezone:     "UTC",
-		filterIncludeNulls: false,
-	}
+			for _, numberOfTasks := range tc.numberOfTasks {
+				b.Run(fmt.Sprintf("tasks=%d", numberOfTasks), func(b *testing.B) {
+					auth := createBenchmarkData(b, needle, 10, numberOfTasks)
 
-	b.Log("Setup done, starting benchmark...")
+					// Get all projects for the user
+					s := db.NewSession()
+					projects, _, _, err := getRawProjectsForUser(
+						s,
+						&projectOptions{
+							user: auth,
+							page: -1,
+						},
+					)
+					require.NoError(b, s.Close())
+					require.NoError(b, err)
 
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		s := db.NewSession()
-		resultSlice, _, _, err := getRawTasksForProjects(s, projects, auth, opts)
-		if len(resultSlice) == 0 {
-			b.Fatalf("no results found for needle %q", needle)
-		}
-		s.Close()
-		if err != nil {
-			b.Fatalf("search error: %v", err)
-		}
+					for b.Loop() {
+						s := db.NewSession()
+						resultSlice, _, _, err := getRawTasksForProjects(s, projects, auth, &tc.opts)
+						assert.NoError(b, s.Close())
+
+						assert.NoError(b, err)
+						require.NotEmpty(b, resultSlice)
+					}
+				})
+			}
+		})
 	}
 }

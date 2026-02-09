@@ -31,6 +31,7 @@ export interface SortBy {
 	updated?: Order
 	done_at?: Order,
 	position?: Order,
+	urgency?: Order,
 }
 
 const VALID_SORT_FIELDS = new Set<string>(

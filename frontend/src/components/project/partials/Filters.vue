@@ -49,7 +49,7 @@
 				variant="primary"
 				@click.prevent.stop="changeAndEmitButton"
 			>
-				{{ $t('filters.showResults') }}
+				{{ $t('filters.showResults')  /* TODO make configurable */ }}
 			</XButton>
 		</template>
 	</Card>

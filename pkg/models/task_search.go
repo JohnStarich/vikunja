@@ -21,6 +21,7 @@ import (
 	"strings"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 
 	"xorm.io/builder"
@@ -104,7 +105,7 @@ type dbTaskSearcher struct {
 }
 
 func (sf *SubTableFilter) ToBaseSubQuery() *builder.Builder {
-	var cond = builder.
+	cond := builder.
 		Select("1").
 		From(sf.Table).
 		Where(builder.Expr(sf.BaseFilter))
@@ -133,6 +134,8 @@ func getOrderByDBStatement(opts *taskSearchOptions) (orderby string, err error) 
 			prefix = "task_positions."
 		case taskPropertyBucketID:
 			prefix = "task_buckets."
+		case taskVirtualPropertyUrgency:
+			prefix = ""
 		default:
 			prefix = "tasks."
 		}
@@ -161,11 +164,10 @@ func getOrderByDBStatement(opts *taskSearchOptions) (orderby string, err error) 
 }
 
 func convertFiltersToDBFilterCond(rawFilters []*taskFilter, includeNulls bool) (filterCond builder.Cond, err error) {
-
-	var dbFilters = make([]builder.Cond, 0, len(rawFilters))
+	dbFilters := make([]builder.Cond, 0, len(rawFilters))
 	// Track join types separately because after merging consecutive sub-table
 	// filters, the indexes of dbFilters no longer correspond 1:1 with rawFilters.
-	var dbFilterJoins = make([]taskFilterConcatinator, 0, len(rawFilters))
+	dbFilterJoins := make([]taskFilterConcatinator, 0, len(rawFilters))
 
 	for i := 0; i < len(rawFilters); i++ {
 		f := rawFilters[i]
@@ -305,7 +307,6 @@ func hasBucketIDInParsedFilter(filters []*taskFilter) bool {
 
 //nolint:gocyclo
 func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCount int64, err error) {
-
 	orderby, err := getOrderByDBStatement(opts)
 	if err != nil {
 		return nil, 0, err
@@ -353,12 +354,29 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 	limit, start := getLimitFromPageIndex(opts.page, opts.perPage)
 	cond := builder.And(builder.Or(projectIDCond, favoritesCond), where, filterCond)
 
-	var distinct = "tasks.*"
+	var selectColumns []string
+	selectColumns = append(selectColumns, x.Quote("tasks.*"))
 	if strings.Contains(orderby, "task_positions.") {
-		distinct += ", task_positions.position"
+		selectColumns = append(selectColumns, x.Quote("task_positions.position"))
+	}
+	if strings.Contains(orderby, taskVirtualPropertyUrgency) { // TODO should this just be unconditional?
+		// Append raw column. Do not quote, it mangles the math operations.
+		userObj, err := user.GetUserByID(d.s, d.a.GetID())
+		if err != nil {
+			return nil, 0, err
+		}
+		urgencyWeights, err := GetUrgencyWeights(d.s, userObj.ID)
+		if err != nil {
+			return nil, 0, err
+		}
+		urgencyScore, err := urgencyScoreQuery(urgencyWeights, d.s.Engine(), db.Type())
+		if err != nil {
+			return nil, 0, err
+		}
+		selectColumns = append(selectColumns, urgencyScore)
 	}
 
-	var expandSubtasks = false
+	expandSubtasks := false
 	for _, expandable := range opts.expand {
 		if expandable == TaskCollectionExpandSubtasks {
 			expandSubtasks = true
@@ -375,7 +393,7 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 	}
 
 	query := d.s.
-		Distinct(distinct).
+		Select(strings.Join(selectColumns, ", ")).
 		Where(cond)
 	if limit > 0 {
 		query = query.Limit(limit, start)
@@ -403,13 +421,16 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 			Join("LEFT", "tasks parent_tasks", "task_relations.other_task_id = parent_tasks.id")
 	}
 
-	tasks = []*Task{}
+	var tasksWithUrgency []*TaskWithUrgency
 	err = query.
 		OrderBy(orderby).
-		Find(&tasks)
+		Find(&tasksWithUrgency)
 	if err != nil {
-		sql, vals := query.LastSQL()
-		return nil, 0, fmt.Errorf("could not fetch tasks, error was '%w', sql: '%v', values: %v", err, sql, vals)
+		return nil, 0, err
+	}
+	for _, task := range tasksWithUrgency {
+		task.Task.Urgency = task.Urgency
+		tasks = append(tasks, &task.Task)
 	}
 
 	// fetch subtasks when expanding
@@ -421,10 +442,10 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 			taskIDs = append(taskIDs, task.ID)
 		}
 
-		var inPlaceholders = strings.Repeat("?,", len(taskIDs))
+		inPlaceholders := strings.Repeat("?,", len(taskIDs))
 		inPlaceholders = inPlaceholders[:len(inPlaceholders)-1]
 
-		var notIn = strings.Repeat("?,", len(taskIDs))
+		notIn := strings.Repeat("?,", len(taskIDs))
 		notIn = notIn[:len(notIn)-1]
 
 		allArgs := make([]any, 0, len(taskIDs)*2)

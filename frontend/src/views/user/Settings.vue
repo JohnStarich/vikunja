@@ -57,6 +57,10 @@ const navigationItems = computed(() => {
 			routeName: 'user.settings.data-export',
 		},
 		{
+			title: t('user.settings.urgency.title'),
+			routeName: 'user.settings.urgency',
+		},
+		{
 			title: t('migrate.title'),
 			routeName: 'migrate.start',
 			activeRouteNames: ['migrate.service'],

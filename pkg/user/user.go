@@ -137,7 +137,6 @@ type User struct {
 
 // RouteForMail routes all notifications for a user to its email address
 func (u *User) RouteForMail() (string, error) {
-
 	if u.Email == "" {
 		s := db.NewSession()
 		defer s.Close()
@@ -567,7 +566,6 @@ func getClaimAsString(claims jwt.MapClaims, field string) (string, error) {
 
 // UpdateUser updates a user
 func UpdateUser(s *xorm.Session, user *User, forceOverride bool) (updatedUser *User, err error) {
-
 	// Check if it exists
 	theUser, err := GetUserWithEmail(s, &User{ID: user.ID})
 	if err != nil && !IsErrUserStatusError(err) {
@@ -713,7 +711,6 @@ func GuardLastAdmin(s *xorm.Session, target *User) error {
 
 // UpdateUserPassword updates the password of a user
 func UpdateUserPassword(s *xorm.Session, user *User, newPassword string) (err error) {
-
 	if newPassword == "" {
 		return ErrEmptyNewPassword{}
 	}

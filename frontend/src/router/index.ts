@@ -125,6 +125,11 @@ const router = createRouter({
 					component: () => import('@/views/user/settings/AtomFeed.vue'),
 				},
 				{
+					path: '/user/settings/urgency',
+					name: 'user.settings.urgency',
+					component: () => import('@/views/user/settings/Urgency.vue'),
+				},
+				{
 					path: '/user/settings/deletion',
 					name: 'user.settings.deletion',
 					component: () => import('@/views/user/settings/Deletion.vue'),

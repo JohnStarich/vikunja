@@ -39,6 +39,7 @@ require (
 	github.com/disintegration/imaging v1.6.2
 	github.com/dustinkirkland/golang-petname v0.0.0-20240422154211-76c06c4bde6b
 	github.com/fatih/color v1.18.0
+	github.com/fsnotify/fsnotify v1.9.0
 	github.com/gabriel-vasile/mimetype v1.4.13
 	github.com/ganigeorgiev/fexpr v0.5.0
 	github.com/getsentry/sentry-go v0.41.0
@@ -63,6 +64,7 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.33
 	github.com/microcosm-cc/bluemonday v1.0.27
 	github.com/olekukonko/tablewriter v1.1.3
+	github.com/pkg/errors v0.9.1
 	github.com/pquerna/otp v1.5.0
 	github.com/prometheus/client_golang v1.23.2
 	github.com/redis/go-redis/v9 v9.17.3
@@ -173,7 +175,6 @@ require (
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.1 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.4 // indirect
-	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/prometheus/client_model v0.6.2 // indirect
 	github.com/prometheus/common v0.66.1 // indirect
