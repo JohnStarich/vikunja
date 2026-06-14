@@ -1774,16 +1774,17 @@ func (Dev) RunAPI(ctx context.Context, persistDirectory string) error {
 		Host:   fmt.Sprintf("localhost:%d", apiPort),
 	}
 	for key, value := range map[string]string{
-		"VIKUNJA_SERVICE_INTERFACE": apiHost.Host,
-		"VIKUNJA_SERVICE_PUBLICURL": apiHost.String(),
-		"VIKUNJA_SERVICE_ROOTPATH":  persistDirectory,
-		"VIKUNJA_SERVICE_JWTSECRET": "e2e-test-jwt-secret-do-not-use-in-production",
-		"VIKUNJA_LOG_LEVEL":         "WARNING",
-		"VIKUNJA_DATABASE_TYPE":     "sqlite",
-		"VIKUNJA_DATABASE_PATH":     filepath.Join(persistDirectory, "db.sqlite"),
-		"VIKUNJA_FILES_BASEPATH":    filepath.Join(persistDirectory, "files"),
-		"VIKUNJA_MAILER_ENABLED":    "false",
-		"VIKUNJA_REDIS_ENABLED":     "false",
+		"VIKUNJA_SERVICE_INTERFACE":     apiHost.Host,
+		"VIKUNJA_SERVICE_PUBLICURL":     apiHost.String(),
+		"VIKUNJA_SERVICE_ROOTPATH":      persistDirectory,
+		"VIKUNJA_SERVICE_JWTSECRET":     "e2e-test-jwt-secret-do-not-use-in-production",
+		"VIKUNJA_LOG_LEVEL":             "WARNING",
+		"VIKUNJA_DATABASE_TYPE":         "sqlite",
+		"VIKUNJA_DATABASE_PATH":         filepath.Join(persistDirectory, "db.sqlite"),
+		"VIKUNJA_FILES_BASEPATH":        filepath.Join(persistDirectory, "files"),
+		"VIKUNJA_MAILER_ENABLED":        "false",
+		"VIKUNJA_REDIS_ENABLED":         "false",
+		"VIKUNJA_RATELIMIT_NOAUTHLIMIT": "1000",
 	} {
 		if err := os.Setenv(key, value); err != nil {
 			return err
