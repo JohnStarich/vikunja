@@ -548,7 +548,7 @@
     },
     "urgentTasks": {
       "title": "Urgency",
-      "description": "Urgency combines task properties, balances them by their importance to you with weights, and sorts your most important tasks to the top.",
+      "description": "Urgency combines task properties with their importance to you as weights, then sorts your most important tasks to the top.",
       "getStarted": "Get started by creating new weights below, then sort your views by Urgency. Larger weights are more important.",
       "property": "Property",
       "filter": "Filter",
