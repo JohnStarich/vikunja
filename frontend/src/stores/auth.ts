@@ -18,11 +18,9 @@ import {
 } from '@/helpers/redirectToProvider'
 import {AUTH_TYPES, type IUser} from '@/modelTypes/IUser'
 import type {IUserSettings} from '@/modelTypes/IUserSettings'
-import type {IUserUrgencyWeights} from '@/modelTypes/IUserUrgencyWeights'
 import router from '@/router'
 import {useConfigStore} from '@/stores/config'
 import UserSettingsModel from '@/models/userSettings'
-import UserUrgencyWeightsModel from '@/models/userUrgencyWeights'
 import {MILLISECONDS_A_SECOND} from '@/constants/date'
 import {PrefixMode} from '@/modules/quickAddMagic'
 import {DATE_DISPLAY} from '@/constants/dateDisplay'
@@ -89,7 +87,6 @@ export const useAuthStore = defineStore('auth', () => {
 	const info = ref<IUser | null>(null)
 	const avatarUrl = ref('')
 	const settings = ref<IUserSettings>(new UserSettingsModel())
-	const urgencyWeights = ref<IUserUrgencyWeights>(new UserUrgencyWeightsModel())
 	
 	const currentSessionId = ref<string | null>(null)
 	const lastUserInfoRefresh = ref<Date | null>(null)

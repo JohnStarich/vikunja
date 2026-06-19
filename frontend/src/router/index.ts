@@ -125,11 +125,6 @@ const router = createRouter({
 					component: () => import('@/views/user/settings/AtomFeed.vue'),
 				},
 				{
-					path: '/user/settings/urgency',
-					name: 'user.settings.urgency',
-					component: () => import('@/views/user/settings/Urgency.vue'),
-				},
-				{
 					path: '/user/settings/deletion',
 					name: 'user.settings.deletion',
 					component: () => import('@/views/user/settings/Deletion.vue'),
@@ -273,6 +268,12 @@ const router = createRouter({
 			meta: {
 				showAsModal: true,
 			},
+		},
+		{
+			path: '/projects/:projectId/settings/urgency',
+			name: 'project.settings.urgent_tasks',
+			component: () => import('@/views/project/settings/Urgency.vue'),
+			props: route => ({ projectId: Number(route.params.projectId as string) }),
 		},
 		{
 			path: '/projects/:projectId/settings/background',

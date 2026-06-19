@@ -31,6 +31,12 @@
 			>
 				{{ $t('menu.views') }}
 			</DropdownItem>
+			<DropdownItem
+				:to="{ name: 'project.settings.urgent_tasks', params: { projectId: project.id } }"
+				icon="circle-exclamation"
+			>
+				{{ $t('project.urgentTasks.title') }}
+			</DropdownItem>
 			<slot name="before-delete" />
 			<DropdownItem
 				:to="{ name: 'filter.settings.delete', params: { projectId: project.id } }"
@@ -61,6 +67,12 @@
 				icon="eye"
 			>
 				{{ $t('menu.views') }}
+			</DropdownItem>
+			<DropdownItem
+				:to="{ name: 'project.settings.urgent_tasks', params: { projectId: project.id } }"
+				icon="circle-exclamation"
+			>
+				{{ $t('project.urgentTasks.title') }}
 			</DropdownItem>
 			<DropdownItem
 				v-if="backgroundsEnabled"

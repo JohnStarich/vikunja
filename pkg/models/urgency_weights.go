@@ -73,10 +73,10 @@ func (u *UrgencyProperty) UnmarshalText(b []byte) error {
 }
 
 type UrgencyWeight struct {
-	UserID   int64           `xorm:"bigint not null unique(weight)"`
-	Property string          `xorm:"varchar(32) not null unique(weight)"` // TODO should this be a string? an enum? an int?
-	Filter   *TaskCollection `xorm:"json null unique(weight)"`            // Optional reference to a filter. Property must be set to [UrgencyMatchesFilter]. // TODO add security around selecting filter IDs and/or using them. Can be created with access and used after access is removed. Should deleting or changing access to a saved filter alter a user's urgency settings?
-	Weight   float64         `xorm:"double not null"`
+	SavedFilterID int64           `xorm:"not null unique(weight)"`
+	Property      string          `xorm:"varchar(32) not null unique(weight)"` // TODO should this be a string? an enum? an int?
+	Filter        *TaskCollection `xorm:"json null unique(weight)"`            // Optional reference to a filter. Property must be set to [UrgencyMatchesFilter]. // TODO add security around selecting filter IDs and/or using them. Can be created with access and used after access is removed. Should deleting or changing access to a saved filter alter a user's urgency settings?
+	Weight        float64         `xorm:"double not null"`
 }
 
 func (*UrgencyWeight) TableName() string {
@@ -84,9 +84,9 @@ func (*UrgencyWeight) TableName() string {
 }
 
 // GetUrgencyWeights returns this user's urgency weights.
-func GetUrgencyWeights(s *xorm.Session, userID int64) ([]*UrgencyWeight, error) {
+func GetUrgencyWeights(s *xorm.Session, savedFilterID int64) ([]*UrgencyWeight, error) {
 	var urgencyWeights []*UrgencyWeight
-	if err := s.Where(builder.Eq{"user_id": userID}).Find(&urgencyWeights); err != nil {
+	if err := s.Where(builder.Eq{"saved_filter_id": savedFilterID}).Find(&urgencyWeights); err != nil {
 		return nil, err
 	}
 	for _, weight := range urgencyWeights {
@@ -109,14 +109,13 @@ type basicFilter struct {
 	IncludeNulls bool   `json:"include_nulls"`
 }
 
-// SetUrgencyWeights validates allWeights, then replaces this user's urgency weights with allWeights.
-// allWeights should skip the User field, as those are overridden.
-func SetUrgencyWeights(s *xorm.Session, userID int64, allWeights []UrgencyWeight) (returnedErr error) {
-	// TODO ensure session is for current user ID
+// SetUrgencyWeights validates allWeights, then replaces this saved filter's urgency weights with allWeights.
+// allWeights should skip the SavedFilterID field, as those are overridden.
+func SetUrgencyWeights(s *xorm.Session, savedFilterID int64, allWeights []UrgencyWeight) (returnedErr error) {
 	properties := make(map[urgencyUniqueKey]struct{})
 	var newWeights []*UrgencyWeight
 	for _, weight := range allWeights {
-		weight.UserID = userID
+		weight.SavedFilterID = savedFilterID
 		uniqueKey := urgencyUniqueKey{
 			Property: weight.Property,
 		}
@@ -144,7 +143,7 @@ func SetUrgencyWeights(s *xorm.Session, userID int64, allWeights []UrgencyWeight
 		newWeights = append(newWeights, &weight)
 	}
 	return db.DoTransaction(s, func() error {
-		if _, err := s.Where(builder.Eq{"user_id": userID}).Delete(&UrgencyWeight{}); err != nil {
+		if _, err := s.Where(builder.Eq{"saved_filter_id": savedFilterID}).Delete(&UrgencyWeight{}); err != nil {
 			sql, _ := s.LastSQL()
 			return errors.Wrapf(err, "failed to mark existing weights for replacement: %s", sql)
 		}

@@ -371,6 +371,7 @@ const ACTIVE_COLUMNS_DEFAULT = {
 	createdBy: false,
 	doneAt: false,
 	commentCount: false,
+	urgency: false,
 }
 
 const SORT_BY_DEFAULT: SortBy = {

@@ -562,8 +562,6 @@ func registerAPIRoutes(a *echo.Group) {
 	u.POST("/settings/avatar", apiv1.ChangeUserAvatarProvider)
 	u.PUT("/settings/avatar/upload", apiv1.UploadAvatar)
 	u.POST("/settings/general", apiv1.UpdateGeneralUserSettings)
-	u.GET("/settings/urgency_weights", apiv1.GetUserUrgencyWeightsSettings)
-	u.POST("/settings/urgency_weights", apiv1.UpdateUserUrgencyWeightsSettings)
 	u.POST("/export/request", apiv1.RequestUserDataExport)
 	u.POST("/export/download", apiv1.DownloadUserDataExport)
 	u.GET("/export", apiv1.GetUserExportStatus)
@@ -811,6 +809,8 @@ func registerAPIRoutes(a *echo.Group) {
 	a.PUT("/filters", savedFiltersHandler.CreateWeb)
 	a.DELETE("/filters/:filter", savedFiltersHandler.DeleteWeb)
 	a.POST("/filters/:filter", savedFiltersHandler.UpdateWeb)
+	a.GET("/filters/:filter/urgency_weights", apiv1.GetSavedFilterUrgencyWeights) // TODO move handlers to idiomatic filter handler
+	a.PUT("/filters/:filter/urgency_weights", apiv1.UpdateSavedFilterUrgencyWeights)
 
 	teamHandler := &handler.WebHandler{
 		EmptyStruct: func() handler.CObject {

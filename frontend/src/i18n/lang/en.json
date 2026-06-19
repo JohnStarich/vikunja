@@ -308,19 +308,6 @@
         "deleteSuccess": "Session revoked successfully. It may take up to 10 minutes for the session to fully expire.",
         "noOtherSessions": "No other active sessions."
       },
-      "urgency": {
-        "title": "Urgent tasks",
-        "description": "Urgency combines task properties, weights them by their importance to you, and sorts your most important tasks to the top. Enable the Urgency column in any view to sort your most urgent tasks. Get started by creating new weights below.",
-        "property": "Property",
-        "filter": "Filter",
-        "weight": "Weight",
-        "properties": {
-          "due_date": "Due Date",
-          "matches_filter": "Matches Filter",
-          "percent_done": "Progress",
-          "priority": "Priority",
-        },
-      },
     },
     "deletion": {
       "title": "Delete your Vikunja Account",
@@ -559,6 +546,20 @@
       "secretHint": "If provided, all requests to the webhook target URL will be signed using HMAC.",
       "secretDocs": "Check out the docs for more details about how to use secrets."
     },
+    "urgentTasks": {
+      "title": "Urgency",
+      "description": "Urgency combines task properties, balances them by their importance to you with weights, and sorts your most important tasks to the top.",
+      "getStarted": "Get started by creating new weights below, then sort by them in your views. A larger weight is more important.",
+      "property": "Property",
+      "filter": "Filter",
+      "weight": "Weight",
+      "properties": {
+        "due_date": "Due Date",
+        "matches_filter": "Matches Filter",
+        "percent_done": "Progress",
+        "priority": "Priority",
+      },
+    },
     "views": {
       "header": "Edit views",
       "title": "Title",
@@ -605,7 +606,7 @@
     },
     "edit": {
       "title": "Edit This Saved Filter",
-      "success": "The filter was saved successfully."
+      "success": "The filter was saved successfully.",
     },
     "query": {
       "placeholder": "Type a search or filter query…",
@@ -677,7 +678,9 @@
       "createdDesc": "Created (Newest first)",
       "createdAsc": "Created (Oldest first)",
       "updatedDesc": "Updated (Newest first)",
-      "updatedAsc": "Updated (Oldest first)"
+      "updatedAsc": "Updated (Oldest first)",
+      "urgencyDesc": "Urgency (Highest first)",
+      "urgencyAsc": "Urgency (Lowest first)"
     }
   },
   "migrate": {

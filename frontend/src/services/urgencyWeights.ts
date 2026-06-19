@@ -1,16 +1,16 @@
 import AbstractService from './abstractService'
-import UserUrgencyWeightsModel from '@/models/userUrgencyWeights'
-import type {IUserUrgencyWeights} from '@/modelTypes/IUserUrgencyWeights'
+import SavedFilterUrgencyWeightsModel from '@/models/savedFilterUrgencyWeights'
+import type {ISavedFilterUrgencyWeights} from '@/modelTypes/ISavedFilterUrgencyWeights'
 
-export default class UserUrgencyWeightsService extends AbstractService<IUserUrgencyWeights> {
+export default class SavedFilterUrgencyWeightsService extends AbstractService<ISavedFilterUrgencyWeights> {
 	constructor() {
 		super({
-			get: '/user/settings/urgency_weights',
-			update: '/user/settings/urgency_weights',
+			get: '/filters/{id}/urgency_weights',
+			create: '/filters/{id}/urgency_weights',
 		})
 	}
 
-	modelFactory(data: Partial<IUserUrgencyWeights>) {
-		return new UserUrgencyWeightsModel(data)
+	modelFactory(data: Partial<ISavedFilterUrgencyWeights>) {
+		return new SavedFilterUrgencyWeightsModel(data)
 	}
 }
