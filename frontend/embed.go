@@ -20,3 +20,5 @@ import "embed"
 
 //go:embed dist
 var Files embed.FS
+
+// TODO this fails when running right after a clone and dev:start
