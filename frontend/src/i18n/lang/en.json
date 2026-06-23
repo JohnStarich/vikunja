@@ -546,7 +546,7 @@
       "secretHint": "If provided, all requests to the webhook target URL will be signed using HMAC.",
       "secretDocs": "Check out the docs for more details about how to use secrets."
     },
-    "urgentTasks": {
+    "urgency": {
       "title": "Urgency",
       "header": "Edit \"{project}\" urgency",
       "description": "Urgency combines task properties with their importance to you as weights, then sorts your most important tasks to the top.",

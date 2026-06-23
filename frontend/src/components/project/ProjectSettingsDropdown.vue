@@ -35,7 +35,7 @@
 				:to="{ name: 'project.settings.urgent_tasks', params: { projectId: project.id } }"
 				icon="circle-exclamation"
 			>
-				{{ $t('project.urgentTasks.title') }}
+				{{ $t('project.urgency.title') }}
 			</DropdownItem>
 			<slot name="before-delete" />
 			<DropdownItem
@@ -72,7 +72,7 @@
 				:to="{ name: 'project.settings.urgent_tasks', params: { projectId: project.id } }"
 				icon="circle-exclamation"
 			>
-				{{ $t('project.urgentTasks.title') }}
+				{{ $t('project.urgency.title') }}
 			</DropdownItem>
 			<DropdownItem
 				v-if="backgroundsEnabled"

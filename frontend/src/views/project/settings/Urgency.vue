@@ -1,8 +1,8 @@
 <template>
 	<Modal @close="$router.back()">
-		<Card :title="$t('project.urgentTasks.header', { project: project?.title })" class="urgent-tasks">
-			<p>{{ $t('project.urgentTasks.description') }}</p>
-			<p>{{ $t('project.urgentTasks.getStarted') }}</p>
+		<Card :title="$t('project.urgency.header', { project: project?.title })" class="urgent-tasks">
+			<p>{{ $t('project.urgency.description') }}</p>
+			<p>{{ $t('project.urgency.getStarted') }}</p>
 
 			<div class="weight-creator">
 				<Dropdown
@@ -13,7 +13,7 @@
 						variant="secondary"
 						@click="toggleOpen"
 					>
-						<span>{{ newProperty ? $t('project.urgentTasks.properties.' + newProperty) : "New property" }}</span>
+						<span>{{ newProperty ? $t('project.urgency.properties.' + newProperty) : "New property" }}</span>
 						<span
 							class="mis-1 dropdown-icon icon is-small"
 							:style="{
@@ -31,7 +31,7 @@
 								toggleOpen()
 							}"
 						>
-							{{ $t('project.urgentTasks.properties.'+property) }}
+							{{ $t('project.urgency.properties.'+property) }}
 						</DropdownItem>
 					</template>
 				</Dropdown>
@@ -61,9 +61,9 @@
 			>
 				<thead>
 					<tr>
-						<th>{{ $t('project.urgentTasks.property') }}</th>
-						<th>{{ $t('project.urgentTasks.filter') }}</th>
-						<th>{{ $t('project.urgentTasks.weight') }}</th>
+						<th>{{ $t('project.urgency.property') }}</th>
+						<th>{{ $t('project.urgency.filter') }}</th>
+						<th>{{ $t('project.urgency.weight') }}</th>
 						<th class="has-text-end">
 							{{ $t('misc.actions') }}
 						</th>
@@ -86,7 +86,7 @@
 							<td>
 								<input
 									class="input weight-input"
-									:placeholder="$t('project.urgentTasks.weight')"
+									:placeholder="$t('project.urgency.weight')"
 									type="number"
 									:value="weight.weight"
 									min="1"
@@ -158,7 +158,7 @@ const service = shallowReactive(new ProjectUrgencyWeightsService())
 
 const {t} = useI18n({useScope: 'global'})
 
-useTitle(() => `${t('project.urgentTasks.title')} - ${t('project.urgentTasks.header', {
+useTitle(() => `${t('project.urgency.title')} - ${t('project.urgency.header', {
 	project: project?.title,
 })}`)
 
@@ -207,7 +207,7 @@ function setWeights(newWeights: IProjectUrgencyWeight[]) {
 			return {
 				...w,
 				propertyName() {
-					return t('project.urgentTasks.properties.' + this.property)
+					return t('project.urgency.properties.' + this.property)
 				},
 				displayName() {
 					if (this.property === 'matches_filter') {
