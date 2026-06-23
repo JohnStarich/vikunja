@@ -13,7 +13,7 @@
 						variant="secondary"
 						@click="toggleOpen"
 					>
-						<span>{{ newProperty ? $t('project.urgency.properties.' + newProperty) : "New property" }}</span>
+						<span>{{ newProperty ? $t(`project.urgency.properties.${newProperty}.name`) : "New property" }}</span>
 						<span
 							class="mis-1 dropdown-icon icon is-small"
 							:style="{
@@ -31,7 +31,7 @@
 								toggleOpen()
 							}"
 						>
-							{{ $t('project.urgency.properties.'+property) }}
+							{{ $t(`project.urgency.properties.${property}.name`) }}
 						</DropdownItem>
 					</template>
 				</Dropdown>
@@ -63,7 +63,10 @@
 					<tr>
 						<th>{{ $t('project.urgency.property') }}</th>
 						<th>{{ $t('project.urgency.filter') }}</th>
-						<th>{{ $t('project.urgency.weight') }}</th>
+						<th>
+							{{ $t('project.urgency.weight.name') }}
+							<Icon :icon="['far', 'circle-question']" v-tooltip="$t('project.urgency.weight.description')" />
+						</th>
 						<th class="has-text-end">
 							{{ $t('misc.actions') }}
 						</th>
@@ -74,6 +77,7 @@
 						<tr>
 							<td class="weight-property">
 								{{ weight.propertyName() }}
+								<Icon :icon="['far', 'circle-question']" v-tooltip="weight.propertyTooltip()" />
 							</td>
 							<td class="weight-filter">
 								<FilterInput
@@ -86,7 +90,7 @@
 							<td>
 								<input
 									class="input weight-input"
-									:placeholder="$t('project.urgency.weight')"
+									:placeholder="$t('project.urgency.weight.name')"
 									type="number"
 									:value="weight.weight"
 									min="1"
@@ -212,7 +216,10 @@ function setWeights(newWeights: IProjectUrgencyWeight[]) {
 			return {
 				...w,
 				propertyName() {
-					return t('project.urgency.properties.' + this.property)
+					return t(`project.urgency.properties.${this.property}.name`)
+				},
+				propertyTooltip() {
+					return t(`project.urgency.properties.${this.property}.description`)
 				},
 				displayName() {
 					if (this.property === 'matches_filter') {
@@ -304,7 +311,7 @@ async function updateWeightFilter(index: number, filter: TaskFilterParams) {
 	}
 }
 .weight-input {
-	width: 5em;
+	width: 5.25em;
 	flex-grow: 0;
 }
 
