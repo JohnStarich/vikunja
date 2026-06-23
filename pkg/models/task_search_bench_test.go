@@ -167,6 +167,7 @@ func BenchmarkTaskSearch(b *testing.B) {
 				b.Skip("Search bench not supported on sqlite")
 			}
 
+			// TODO bench on psql
 			for _, numberOfTasks := range tc.numberOfTasks {
 				b.Run(fmt.Sprintf("tasks=%d", numberOfTasks), func(b *testing.B) {
 					auth := createBenchmarkData(b, needle, 10, numberOfTasks)
