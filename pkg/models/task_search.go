@@ -358,12 +358,18 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 	if strings.Contains(orderby, "task_positions.") {
 		selectColumns = append(selectColumns, x.Quote("task_positions.position"))
 	}
-	if strings.Contains(orderby, taskVirtualPropertyUrgency) && opts.projectViewID > 0 { // TODO should this just be unconditional?
+	var singleProjectID *int64
+	if len(opts.projectIDs) == 1 {
+		singleProjectID = &opts.projectIDs[0]
+	} else if opts.projectViewID > 0 {
 		view, err := GetProjectViewByID(d.s, opts.projectViewID)
 		if err != nil {
 			return nil, 0, err
 		}
-		urgencyWeights, err := GetUrgencyWeights(d.s, view.ProjectID)
+		singleProjectID = &view.ProjectID
+	}
+	if strings.Contains(orderby, taskVirtualPropertyUrgency) && singleProjectID != nil { // TODO should this just be unconditional?
+		urgencyWeights, err := GetUrgencyWeights(d.s, *singleProjectID)
 		if err != nil {
 			return nil, 0, err
 		}
