@@ -112,7 +112,8 @@
 							<td
 								colspan="4"
 								class="weight-proportion-container"
-								:title="`${weight.displayName()} is ${Math.round(weight.weight / weightsMax * 100)}% of the largest weight`"
+								:title="weightProportionTitle(weight)"
+								v-tooltip="weightProportionTitle(weight)"
 							>
 								<div
 									class="weight-proportion-value"
@@ -191,6 +192,10 @@ service.get({id: props.projectId}).then((result: IProjectUrgencyWeights) => {
 			})
 	})
 })
+
+function weightProportionTitle(weight: IProjectUrgencyWeight): string {
+	return `${weight.displayName()} is ${Math.round(weight.weight / weightsMax.value * 100)}% of the largest weight`
+}
 
 const filterEditorIndex = ref<number>(null)
 const filterEditorWeight = ref<TaskFilterParams>(null)
