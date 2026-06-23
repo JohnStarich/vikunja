@@ -22,9 +22,9 @@ type quoter interface {
 func defaultWeights() []*UrgencyWeight {
 	// Use sensible weights when none have been configured:
 	return []*UrgencyWeight{
-		{SavedFilterID: -1, Property: UrgencyDueDate.String(), Weight: 100},
-		{SavedFilterID: -1, Property: UrgencyPercentDone.String(), Weight: 100},
-		{SavedFilterID: -1, Property: UrgencyPriority.String(), Weight: 10},
+		{ProjectID: -1, Property: UrgencyDueDate.String(), Weight: 100},
+		{ProjectID: -1, Property: UrgencyPercentDone.String(), Weight: 100},
+		{ProjectID: -1, Property: UrgencyPriority.String(), Weight: 10},
 	}
 }
 

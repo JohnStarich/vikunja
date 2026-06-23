@@ -12,8 +12,8 @@ import (
 	"github.com/labstack/echo/v5"
 )
 
-type SavedFilterUrgencyWeights struct {
-	// TODO merge this into a saved filter? Is it useful to keep this split out to manipulate a single weight at a time?
+type ProjectUrgencyWeights struct {
+	// TODO merge this into a project? Is it useful to keep this split out to manipulate a single weight at a time?
 	UrgencyWeights []UrgencyWeight `json:"urgency_weights"`
 }
 
@@ -28,35 +28,35 @@ type BasicFilter struct {
 	IncludeNulls bool   `json:"include_nulls"`
 }
 
-func getSavedFilterID(c *echo.Context) (int64, error) {
-	idStr := c.Param("filter")
+func getProjectID(c *echo.Context) (int64, error) {
+	idStr := c.Param("project")
 	const (
 		decimalBase = 10
 		int64Size   = 64
 	)
 	id, err := strconv.ParseInt(idStr, decimalBase, int64Size)
 	if err != nil {
-		return 0, models.ErrInvalidModel{Err: fmt.Errorf("saved_filter_id must be an integer, got %q: %w", idStr, err)}
+		return 0, models.ErrInvalidModel{Err: fmt.Errorf("project_id must be an integer, got %q: %w", idStr, err)}
 	}
 	return id, nil
 }
 
-// GetSavedFilterUrgencyWeights returns the currently set saved filter urgency weights
-// @Summary Return saved filter urgency weights
-// @Description Returns the saved filter's urgency weights.
+// GetProjectUrgencyWeights returns the currently set project urgency weights
+// @Summary Return project urgency weights
+// @Description Returns the project's urgency weights.
 // @tags filter
 // @Accept json
 // @Produce json
 // @Security JWTKeyAuth
-// @Success 200 {object} SavedFilterUrgencyWeights
+// @Success 200 {object} ProjectUrgencyWeights
 // @Failure 400 {object} web.HTTPError "Something's invalid."
 // @Failure 500 {object} models.Message "Internal server error."
 // @Router /user/settings/avatar [get]
-func GetSavedFilterUrgencyWeights(c *echo.Context) error {
+func GetProjectUrgencyWeights(c *echo.Context) error {
 	s := db.NewSession()
 	defer s.Close()
 
-	id, err := getSavedFilterID(c)
+	id, err := getProjectID(c)
 	if err != nil {
 		return err
 	}
@@ -79,29 +79,30 @@ func GetSavedFilterUrgencyWeights(c *echo.Context) error {
 			Filter:   filter,
 		})
 	}
-	return c.JSON(http.StatusOK, SavedFilterUrgencyWeights{
+	return c.JSON(http.StatusOK, ProjectUrgencyWeights{
 		UrgencyWeights: urgencyWeights,
 	})
 }
 
-// UpdateSavedFilterUrgencyWeights is the handler to change a saved filter's urgency weights
-// @Summary Change a saved filter's urgency weights
+// UpdateProjectUrgencyWeights is the handler to change a project's urgency weights
+// @Summary Change a project's urgency weights
 // @tags filter
 // @Accept json
 // @Produce json
 // @Security JWTKeyAuth
-// @Param urgency_weights body UrgencyWeights true "The updated saved filter urgency weights"
+// @Param urgency_weights body UrgencyWeights true "The updated project urgency weights"
 // @Success 200 {object} models.Message
 // @Failure 400 {object} web.HTTPError "Something's invalid."
 // @Failure 500 {object} models.Message "Internal server error."
 // @Router /user/settings/urgency_weights [post]
-func UpdateSavedFilterUrgencyWeights(c *echo.Context) error {
-	id, err := getSavedFilterID(c)
+func UpdateProjectUrgencyWeights(c *echo.Context) error {
+	id, err := getProjectID(c)
 	if err != nil {
 		return err
 	}
+	// TODO validate user access to filter and filter exists
 
-	var urgencyWeights SavedFilterUrgencyWeights
+	var urgencyWeights ProjectUrgencyWeights
 	if err := c.Bind(&urgencyWeights); err != nil {
 		var he *echo.HTTPError
 		if errors.As(err, &he) {
@@ -129,7 +130,7 @@ func UpdateSavedFilterUrgencyWeights(c *echo.Context) error {
 		if weight.Filter != nil {
 			filter = &models.TaskCollection{
 				Filter:             weight.Filter.Query,
-				FilterTimezone:     u.Timezone, // TODO replace with saved filter's time zone?
+				FilterTimezone:     u.Timezone, // TODO replace with project's time zone?
 				FilterIncludeNulls: weight.Filter.IncludeNulls,
 			}
 			if err := filter.ValidateFilterString(); err != nil {

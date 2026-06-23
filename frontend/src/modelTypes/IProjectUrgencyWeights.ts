@@ -1,6 +1,6 @@
 import type {IAbstract} from './IAbstract'
 
-export interface ISavedFilterUrgencyWeights extends IAbstract {
+export interface IProjectUrgencyWeights extends IAbstract {
 	urgencyWeights: UrgencyWeight[]
 }
 

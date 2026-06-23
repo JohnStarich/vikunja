@@ -142,7 +142,7 @@ import DropdownItem from '@/components/misc/DropdownItem.vue'
 import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import FilterInput from '@/components/input/filter/FilterInput.vue'
 import Filters from '@/components/project/partials/Filters.vue'
-import SavedFilterUrgencyWeightsService from '@/services/urgencyWeights'
+import ProjectUrgencyWeightsService from '@/services/urgencyWeights'
 import TaskFilterParams, { getDefaultTaskFilterParams } from '@/services/taskCollection'
 import type {IProject} from '@/modelTypes/IProject'
 import {success} from '@/message'
@@ -152,7 +152,7 @@ const props = defineProps<{
 	projectId: IProject['id'],
 }>()
 
-const service = shallowReactive(new SavedFilterUrgencyWeightsService())
+const service = shallowReactive(new ProjectUrgencyWeightsService())
 
 const {t} = useI18n({useScope: 'global'})
 
@@ -166,10 +166,10 @@ const allPropertyNames = new Set([
 ])
 const newProperty = ref<string>(null)
 
-const weights = ref<ISavedFilterUrgencyWeight[]>([])
+const weights = ref<IProjectUrgencyWeight[]>([])
 const weightsTotal = ref<number>(0)
 const weightsMax = ref<number>(0)
-service.get({id: props.projectId}).then((result: ISavedFilterUrgencyWeights) => {
+service.get({id: props.projectId}).then((result: IProjectUrgencyWeights) => {
 	setWeights(result.urgencyWeights)
 	watchEffect(() => {
 		weightsTotal.value = weights.value
@@ -197,7 +197,7 @@ function newPropertyNames() {
 		.add('matches_filter') // matches_filter can be added multiple times
 }
 
-function setWeights(newWeights: ISavedFilterUrgencyWeight[]) {
+function setWeights(newWeights: IProjectUrgencyWeight[]) {
 	weights.value = newWeights
 		.map(w => {
 			return {
@@ -216,7 +216,7 @@ function setWeights(newWeights: ISavedFilterUrgencyWeight[]) {
 }
 
 async function addWeight() {
-	const urgencyWeight: ISavedFilterUrgencyWeight = {
+	const urgencyWeight: IProjectUrgencyWeight = {
 		property: newProperty.value,
 		weight: 1,
 		filter: newProperty.value !== 'matches_filter' ? null : {
@@ -231,7 +231,7 @@ async function addWeight() {
 }
 
 // updateWeight updates the given index with a shallow merge of weight onto the current value
-async function updateWeight(index: number, weight: ISavedFilterUrgencyWeight) {
+async function updateWeight(index: number, weight: IProjectUrgencyWeight) {
 	weight = Object.assign({}, weights.value[index], weight)
 	await updateWeights(weights.value.with(index, weight))
 }
@@ -240,7 +240,7 @@ async function deleteWeight(index: number) {
 	await updateWeights(weights.value.toSpliced(index, 1))
 }
 
-async function updateWeights(urgencyWeights: ISavedFilterUrgencyWeight[]) {
+async function updateWeights(urgencyWeights: IProjectUrgencyWeight[]) {
 	urgencyWeights = urgencyWeights.map(w => {
 		if (w.property !== 'matches_filter') {
 			w.filter = null

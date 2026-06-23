@@ -809,8 +809,6 @@ func registerAPIRoutes(a *echo.Group) {
 	a.PUT("/filters", savedFiltersHandler.CreateWeb)
 	a.DELETE("/filters/:filter", savedFiltersHandler.DeleteWeb)
 	a.POST("/filters/:filter", savedFiltersHandler.UpdateWeb)
-	a.GET("/filters/:filter/urgency_weights", apiv1.GetSavedFilterUrgencyWeights) // TODO move handlers to idiomatic filter handler
-	a.PUT("/filters/:filter/urgency_weights", apiv1.UpdateSavedFilterUrgencyWeights)
 
 	teamHandler := &handler.WebHandler{
 		EmptyStruct: func() handler.CObject {
@@ -925,6 +923,10 @@ func registerAPIRoutes(a *echo.Group) {
 	a.PUT("/projects/:project/views", projectViewProvider.CreateWeb)
 	a.DELETE("/projects/:project/views/:view", projectViewProvider.DeleteWeb)
 	a.POST("/projects/:project/views/:view", projectViewProvider.UpdateWeb)
+
+	// Project urgency weights
+	a.GET("/projects/:project/urgency_weights", apiv1.GetProjectUrgencyWeights) // TODO move handlers to idiomatic project handler
+	a.PUT("/projects/:project/urgency_weights", apiv1.UpdateProjectUrgencyWeights)
 
 	// Kanban Task Bucket Relation
 	taskBucketProvider := &handler.WebHandler{
