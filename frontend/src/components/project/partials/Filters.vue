@@ -60,6 +60,7 @@ import {computed, ref, watch} from 'vue'
 import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import {useRoute} from 'vue-router'
 import type {TaskFilterParams} from '@/services/taskCollection'
+import {isSavedFilter} from '@/services/savedFilter'
 import {useLabelStore} from '@/stores/labels'
 import {useProjectStore} from '@/stores/projects'
 import {
@@ -93,9 +94,11 @@ const emit = defineEmits<{
 const route = useRoute()
 const projectId = computed(() => {
 	if (route.name?.startsWith('project.')) {
-		return Number(route.params.projectId)
+		const projectId = Number(route.params.projectId)
+		if (! isSavedFilter({id: projectId })) {
+			return projectId
+		}
 	}
-
 	return undefined
 })
 
