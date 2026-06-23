@@ -21,7 +21,6 @@ import (
 	"strings"
 
 	"code.vikunja.io/api/pkg/db"
-	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 
 	"xorm.io/builder"
@@ -359,13 +358,12 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 	if strings.Contains(orderby, "task_positions.") {
 		selectColumns = append(selectColumns, x.Quote("task_positions.position"))
 	}
-	if strings.Contains(orderby, taskVirtualPropertyUrgency) { // TODO should this just be unconditional?
-		// Append raw column. Do not quote, it mangles the math operations.
-		userObj, err := user.GetUserByID(d.s, d.a.GetID())
+	if strings.Contains(orderby, taskVirtualPropertyUrgency) && opts.projectViewID > 0 { // TODO should this just be unconditional?
+		view, err := GetProjectViewByID(d.s, opts.projectViewID)
 		if err != nil {
 			return nil, 0, err
 		}
-		urgencyWeights, err := GetUrgencyWeights(d.s, userObj.ID)
+		urgencyWeights, err := GetUrgencyWeights(d.s, view.ProjectID)
 		if err != nil {
 			return nil, 0, err
 		}
@@ -373,6 +371,7 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 		if err != nil {
 			return nil, 0, err
 		}
+		// Append raw column. Do not quote, it mangles the math operations.
 		selectColumns = append(selectColumns, urgencyScore)
 	}
 
