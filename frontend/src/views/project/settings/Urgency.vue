@@ -1,6 +1,6 @@
 <template>
 	<Modal @close="$router.back()">
-		<Card :title="$t('project.urgentTasks.title')" class="urgent-tasks">
+		<Card :title="$t('project.urgentTasks.header', { project: project?.title })" class="urgent-tasks">
 			<p>{{ $t('project.urgentTasks.description') }}</p>
 			<p>{{ $t('project.urgentTasks.getStarted') }}</p>
 
@@ -146,17 +146,21 @@ import ProjectUrgencyWeightsService from '@/services/urgencyWeights'
 import TaskFilterParams, { getDefaultTaskFilterParams } from '@/services/taskCollection'
 import type {IProject} from '@/modelTypes/IProject'
 import {success} from '@/message'
+import {useProject} from '@/stores/projects'
 import {useTitle} from '@/composables/useTitle'
 
 const props = defineProps<{
 	projectId: IProject['id'],
 }>()
 
+const {project} = useProject(() => props.projectId)
 const service = shallowReactive(new ProjectUrgencyWeightsService())
 
 const {t} = useI18n({useScope: 'global'})
 
-useTitle(() => `${t('project.urgentTasks.title')} - ${t('projects.edit.title')}`)
+useTitle(() => `${t('project.urgentTasks.title')} - ${t('project.urgentTasks.header', {
+	project: project?.title,
+})}`)
 
 const allPropertyNames = new Set([
 	'due_date',
