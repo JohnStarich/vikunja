@@ -56,7 +56,7 @@
 				/>
 			</Modal>
 			<table
-				v-if="weights.length > 0"
+				v-if="weights?.length > 0"
 				class="table weights"
 			>
 				<thead>
