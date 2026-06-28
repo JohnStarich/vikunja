@@ -400,6 +400,7 @@ func (Test) Feature(ctx context.Context) error {
 		"-coverprofile", "cover.out",
 		"-timeout", "45m",
 		"-short",
+		"-race",
 		"./...")
 }
 
