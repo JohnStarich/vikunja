@@ -10,6 +10,7 @@ import (
 	"code.vikunja.io/api/pkg/models"
 	user2 "code.vikunja.io/api/pkg/user"
 	"github.com/labstack/echo/v5"
+	"xorm.io/xorm"
 )
 
 type ProjectUrgencyWeights struct {
@@ -23,7 +24,7 @@ type UrgencyWeight struct {
 	Filter   *models.BasicFilter `json:"filter,omitempty"`
 }
 
-func getProjectID(c *echo.Context) (int64, error) {
+func getProject(c *echo.Context, s *xorm.Session, updatePermission bool) (*models.Project, error) {
 	idStr := c.Param("project")
 	const (
 		decimalBase = 10
@@ -31,9 +32,32 @@ func getProjectID(c *echo.Context) (int64, error) {
 	)
 	id, err := strconv.ParseInt(idStr, decimalBase, int64Size)
 	if err != nil {
-		return 0, models.ErrInvalidModel{Err: fmt.Errorf("project_id must be an integer, got %q: %w", idStr, err)}
+		return nil, models.ErrInvalidModel{Err: fmt.Errorf("project_id must be an integer, got %q: %w", idStr, err)}
 	}
-	return id, nil
+
+	project, err := models.GetProjectSimpleByID(s, id)
+	if err != nil {
+		return nil, err
+	}
+
+	u, err := user2.GetCurrentUser(c)
+	if err != nil {
+		return nil, err
+	}
+
+	var hasAccess bool
+	if updatePermission {
+		hasAccess, err = project.CanUpdate(s, u.Auth)
+	} else {
+		hasAccess, _, err = project.CanRead(s, u.Auth)
+	}
+	if err != nil {
+		return nil, err
+	}
+	if !hasAccess {
+		return nil, models.ErrGenericForbidden{}
+	}
+	return project, nil
 }
 
 // GetProjectUrgencyWeights returns the currently set project urgency weights
@@ -51,11 +75,11 @@ func GetProjectUrgencyWeights(c *echo.Context) error {
 	s := db.NewSession()
 	defer s.Close()
 
-	id, err := getProjectID(c)
+	project, err := getProject(c, s, false)
 	if err != nil {
 		return err
 	}
-	weights, err := models.GetUrgencyWeights(s, id)
+	weights, err := models.GetUrgencyWeights(s, project.ID)
 	if err != nil {
 		return err
 	}
@@ -91,7 +115,10 @@ func GetProjectUrgencyWeights(c *echo.Context) error {
 // @Failure 500 {object} models.Message "Internal server error."
 // @Router /user/settings/urgency_weights [post]
 func UpdateProjectUrgencyWeights(c *echo.Context) error {
-	id, err := getProjectID(c)
+	s := db.NewSession()
+	defer s.Close()
+
+	project, err := getProject(c, s, true)
 	if err != nil {
 		return err
 	}
@@ -108,14 +135,6 @@ func UpdateProjectUrgencyWeights(c *echo.Context) error {
 	if err := c.Validate(urgencyWeights); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error()).Wrap(err)
 	}
-
-	u, err := user2.GetCurrentUser(c)
-	if err != nil {
-		return err
-	}
-
-	s := db.NewSession()
-	defer s.Close()
 
 	var weights []models.UrgencyWeight
 	for _, weight := range urgencyWeights.UrgencyWeights {
@@ -138,7 +157,7 @@ func UpdateProjectUrgencyWeights(c *echo.Context) error {
 			Filter:   filter,
 		})
 	}
-	if err := models.SetUrgencyWeights(s, id, weights); err != nil {
+	if err := models.SetUrgencyWeights(s, project.ID, weights); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error()).Wrap(err)
 	}
 
