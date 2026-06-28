@@ -274,7 +274,6 @@ function editWeightFilter(index: number) {
 	filterEditorWeight.value = Object.assign(getDefaultTaskFilterParams(), {
 		filter: weight.filter.query,
 		filter_include_nulls: weight.filter.includeNulls,
-		// filter_timezone: weight.filter.timeZone, // TODO
 	})
 	filterEditorIndex.value = index
 }
@@ -284,7 +283,6 @@ async function updateWeightFilter(index: number, filter: TaskFilterParams) {
 		filter: {
 			query: filter.filter,
 			includeNulls: filter.filter_include_nulls,
-			// timeZone: filter.filter_time_zone, // TODO
 		},
 	})
 	filterEditorIndex.value = null
