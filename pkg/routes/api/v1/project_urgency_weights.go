@@ -46,9 +46,9 @@ func getProject(c *echo.Context, s *xorm.Session, updatePermission bool) (*model
 
 	var hasAccess bool
 	if updatePermission {
-		hasAccess, err = project.CanUpdate(s, u.Auth)
+		hasAccess, err = project.CanUpdate(s, u)
 	} else {
-		hasAccess, _, err = project.CanRead(s, u.Auth)
+		hasAccess, _, err = project.CanRead(s, u)
 	}
 	if err != nil {
 		return nil, err
