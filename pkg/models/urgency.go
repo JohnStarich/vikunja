@@ -57,44 +57,17 @@ func urgencyScoreQuery(weights []*UrgencyWeight, quoter quoter, dbType schemas.D
 func weightedScore(quoter quoter, dbType schemas.DBType, weights []*UrgencyWeight) (string, error) {
 	var weightedQueries []string
 	for _, weight := range weights {
-		query, err := normalizedPropertyScore(weight, quoter, dbType)
+		var property UrgencyProperty
+		if err := property.UnmarshalText([]byte(weight.Property)); err != nil {
+			return "", err
+		}
+		query, err := property.normalizedPropertyScore(weight.Filter, quoter, dbType)
 		if err != nil {
 			return "", err
 		}
 		weightedQueries = append(weightedQueries, fmt.Sprintf("COALESCE(%s, 0) * %.3f", query, weight.Weight))
 	}
 	return fmt.Sprintf("\n\t%s\n", strings.Join(weightedQueries, " +\n\t")), nil
-}
-
-func normalizedPropertyScore(weight *UrgencyWeight, quoter quoter, dbType schemas.DBType) (string, error) {
-	var property UrgencyProperty
-	if err := property.UnmarshalText([]byte(weight.Property)); err != nil {
-		return "", err
-	}
-	switch property {
-	case UrgencyDueDate: // TODO move to an object pattern
-		return dueDateScoreQuery(quoter, dbType)
-	case UrgencyMatchesFilter:
-		cond, err := weight.Filter.FilterCondition()
-		if err != nil {
-			return "", err
-		}
-		query := builder.NewWriter()
-		if err := cond.WriteTo(query); err != nil {
-			return "", errors.Wrap(err, "failed to render saved filter condition")
-		}
-		queryStr, err := builder.ConvertToBoundSQL(query.String(), query.Args())
-		if err != nil {
-			return "", errors.Wrap(err, "failed to bind filter args")
-		}
-		return fmt.Sprintf("CASE WHEN (%s) THEN 1 ELSE 0 END", queryStr), nil
-	case UrgencyPercentDone:
-		return quoter.Quote("tasks.percent_done"), nil
-	case UrgencyPriority:
-		return divideColumn(quoter, "tasks.priority", "5.0"), nil
-	default:
-		return "", errors.Errorf("unrecognized urgency score key: %s", property)
-	}
 }
 
 func divideColumn(quoter quoter, columnName, denominator string) string {

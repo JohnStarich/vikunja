@@ -8,6 +8,7 @@ import (
 	"github.com/pkg/errors"
 	"xorm.io/builder"
 	"xorm.io/xorm"
+	"xorm.io/xorm/schemas"
 )
 
 type UrgencyProperty int
@@ -51,7 +52,7 @@ func (u UrgencyProperty) name() (string, error) {
 func (u UrgencyProperty) String() string {
 	name, err := u.name()
 	if err != nil {
-		panic(err)
+		return fmt.Sprintf("<err: %s>", err)
 	}
 	return name
 }
@@ -70,6 +71,33 @@ func (u *UrgencyProperty) UnmarshalText(b []byte) error {
 		}
 	}
 	return fmt.Errorf("unknown urgency property: %q", string(b))
+}
+
+func (u UrgencyProperty) normalizedPropertyScore(filter *TaskCollection, quoter quoter, dbType schemas.DBType) (string, error) {
+	switch u {
+	case UrgencyDueDate:
+		return dueDateScoreQuery(quoter, dbType)
+	case UrgencyMatchesFilter:
+		cond, err := filter.FilterCondition()
+		if err != nil {
+			return "", err
+		}
+		query := builder.NewWriter()
+		if err := cond.WriteTo(query); err != nil {
+			return "", errors.Wrap(err, "failed to render saved filter condition")
+		}
+		queryStr, err := builder.ConvertToBoundSQL(query.String(), query.Args())
+		if err != nil {
+			return "", errors.Wrap(err, "failed to bind filter args")
+		}
+		return fmt.Sprintf("CASE WHEN (%s) THEN 1 ELSE 0 END", queryStr), nil
+	case UrgencyPercentDone:
+		return quoter.Quote("tasks.percent_done"), nil
+	case UrgencyPriority:
+		return divideColumn(quoter, "tasks.priority", "5.0"), nil
+	default:
+		return "", errors.Errorf("unrecognized urgency score property: %s", u)
+	}
 }
 
 type UrgencyWeight struct {
