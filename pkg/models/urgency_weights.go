@@ -103,7 +103,7 @@ func (u UrgencyProperty) normalizedPropertyScore(filter *TaskCollection, quoter 
 type UrgencyWeight struct {
 	ProjectID int64           `xorm:"not null unique(weight)"`
 	Property  string          `xorm:"varchar(50) not null unique(weight)"`
-	Filter    *TaskCollection `xorm:"json null unique(weight)"` // Optional reference to a filter. Property must be set to [UrgencyMatchesFilter]. // TODO add security around selecting filter IDs and/or using them. Can be created with access and used after access is removed. Should deleting or changing access to a project alter a user's urgency settings?
+	Filter    *TaskCollection `xorm:"json null unique(weight)"` // Optional reference to a filter. Property must be set to [UrgencyMatchesFilter].
 	Weight    float64         `xorm:"double not null"`
 }
 
