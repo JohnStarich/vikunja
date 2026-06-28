@@ -14,7 +14,6 @@ import (
 )
 
 type ProjectUrgencyWeights struct {
-	// TODO merge this into a project? Is it useful to keep this split out to manipulate a single weight at a time?
 	UrgencyWeights []UrgencyWeight `json:"urgency_weights"`
 }
 
