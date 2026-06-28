@@ -394,7 +394,13 @@ type Test mg.Namespace
 func (Test) Feature(ctx context.Context) error {
 	mg.Deps(initVars)
 	// We run everything sequentially and not in parallel to prevent issues with real test databases
-	return runAndStreamOutput(ctx, "go", "test", goDetectVerboseFlag(), "-p", "1", "-coverprofile", "cover.out", "-timeout", "45m", "-short", "./...")
+	return runAndStreamOutput(ctx, "go", "test",
+		goDetectVerboseFlag(),
+		"-p", "1",
+		"-coverprofile", "cover.out",
+		"-timeout", "45m",
+		"-short",
+		"./...")
 }
 
 // Coverage runs the tests and builds the coverage html file from coverage output
