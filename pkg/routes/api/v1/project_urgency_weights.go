@@ -18,9 +18,9 @@ type ProjectUrgencyWeights struct {
 }
 
 type UrgencyWeight struct {
-	Property string              `json:"property"` // TODO should this be the enum type with UnmarshalText()?
-	Weight   float64             `json:"weight"`
-	Filter   *models.BasicFilter `json:"filter,omitempty"`
+	Property models.UrgencyProperty `json:"property"`
+	Weight   float64                `json:"weight"`
+	Filter   *models.BasicFilter    `json:"filter,omitempty"`
 }
 
 func getProject(c *echo.Context, s *xorm.Session, updatePermission bool) (*models.Project, error) {
@@ -91,8 +91,12 @@ func GetProjectUrgencyWeights(c *echo.Context) error {
 				IncludeNulls: weight.Filter.FilterIncludeNulls,
 			}
 		}
+		var property models.UrgencyProperty
+		if err := property.UnmarshalText([]byte(weight.Property)); err != nil {
+			return err
+		}
 		urgencyWeights = append(urgencyWeights, UrgencyWeight{
-			Property: weight.Property,
+			Property: property,
 			Weight:   weight.Weight,
 			Filter:   filter,
 		})
@@ -150,8 +154,12 @@ func UpdateProjectUrgencyWeights(c *echo.Context) error {
 		if weight.Weight < 1 {
 			return models.ErrInvalidModel{Err: fmt.Errorf("property %q weight was %.2f, must be at least 1", weight.Property, weight.Weight)}
 		}
+		propertyName, err := weight.Property.MarshalText()
+		if err != nil {
+			return err
+		}
 		weights = append(weights, models.UrgencyWeight{
-			Property: weight.Property,
+			Property: string(propertyName),
 			Weight:   weight.Weight,
 			Filter:   filter,
 		})
