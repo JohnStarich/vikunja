@@ -18,14 +18,9 @@ type ProjectUrgencyWeights struct {
 }
 
 type UrgencyWeight struct {
-	Property string       `json:"property"` // TODO should this be the enum type with UnmarshalText()?
-	Weight   float64      `json:"weight"`
-	Filter   *BasicFilter `json:"filter,omitempty"`
-}
-
-type BasicFilter struct {
-	Query        string `json:"query"`
-	IncludeNulls bool   `json:"include_nulls"`
+	Property string              `json:"property"` // TODO should this be the enum type with UnmarshalText()?
+	Weight   float64             `json:"weight"`
+	Filter   *models.BasicFilter `json:"filter,omitempty"`
 }
 
 func getProjectID(c *echo.Context) (int64, error) {
@@ -66,9 +61,9 @@ func GetProjectUrgencyWeights(c *echo.Context) error {
 	}
 	urgencyWeights := make([]UrgencyWeight, 0, len(weights))
 	for _, weight := range weights {
-		var filter *BasicFilter
+		var filter *models.BasicFilter
 		if weight.Filter != nil {
-			filter = &BasicFilter{
+			filter = &models.BasicFilter{
 				Query:        weight.Filter.Filter,
 				IncludeNulls: weight.Filter.FilterIncludeNulls,
 			}

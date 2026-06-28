@@ -128,11 +128,10 @@ func GetUrgencyWeights(s *xorm.Session, projectID int64) ([]*UrgencyWeight, erro
 
 type urgencyUniqueKey struct {
 	Property string      `json:"property"`
-	Filter   basicFilter `json:"filter,omitempty"`
+	Filter   BasicFilter `json:"filter,omitempty"`
 }
 
-// TODO this is duplicated
-type basicFilter struct {
+type BasicFilter struct {
 	Query        string `json:"query"`
 	IncludeNulls bool   `json:"include_nulls"`
 }
@@ -155,7 +154,7 @@ func SetUrgencyWeights(s *xorm.Session, projectID int64, allWeights []UrgencyWei
 			if weight.Filter == nil {
 				return errors.New("filter must be set for matches_filter weight")
 			}
-			uniqueKey.Filter = basicFilter{
+			uniqueKey.Filter = BasicFilter{
 				Query:        weight.Filter.Filter,
 				IncludeNulls: weight.Filter.FilterIncludeNulls,
 			}
