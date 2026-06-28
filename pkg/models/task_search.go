@@ -373,6 +373,11 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 		if err != nil {
 			return nil, 0, err
 		}
+		for _, weight := range urgencyWeights {
+			if weight.Filter != nil {
+				weight.Filter.FilterTimezone = opts.filterTimezone
+			}
+		}
 		urgencyScore, err := urgencyScoreQuery(urgencyWeights, d.s.Engine(), db.Type())
 		if err != nil {
 			return nil, 0, err
