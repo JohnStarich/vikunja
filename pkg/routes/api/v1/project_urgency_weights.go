@@ -95,7 +95,6 @@ func UpdateProjectUrgencyWeights(c *echo.Context) error {
 	if err != nil {
 		return err
 	}
-	// TODO validate user access to filter and filter exists
 
 	var urgencyWeights ProjectUrgencyWeights
 	if err := c.Bind(&urgencyWeights); err != nil {
@@ -119,13 +118,11 @@ func UpdateProjectUrgencyWeights(c *echo.Context) error {
 	defer s.Close()
 
 	var weights []models.UrgencyWeight
-	// TODO add validation for filter property
 	for _, weight := range urgencyWeights.UrgencyWeights {
 		var filter *models.TaskCollection
 		if weight.Filter != nil {
 			filter = &models.TaskCollection{
 				Filter:             weight.Filter.Query,
-				FilterTimezone:     u.Timezone, // TODO replace with project's time zone?
 				FilterIncludeNulls: weight.Filter.IncludeNulls,
 			}
 			if err := filter.ValidateFilterString(); err != nil {

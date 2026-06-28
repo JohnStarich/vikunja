@@ -161,6 +161,10 @@ func SetUrgencyWeights(s *xorm.Session, projectID int64, allWeights []UrgencyWei
 			if weight.Filter.Filter == "" {
 				return errors.New("filter query must be set")
 			}
+		} else {
+			if weight.Filter != nil {
+				return errors.Errorf("%s does not support 'filter'", weight.Property)
+			}
 		}
 
 		if _, exists := properties[uniqueKey]; exists {
