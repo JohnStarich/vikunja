@@ -51,6 +51,7 @@
 					class="filter-popup"
 					:change-immediately="false"
 					show-close
+					edit-role="indirect"
 					@close="filterEditorIndex = null"
 					@showResults="updateWeightFilter(filterEditorIndex, filterEditorWeight)"
 				/>

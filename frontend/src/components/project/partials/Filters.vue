@@ -37,20 +37,37 @@
 			v-if="hasFooter"
 			#footer
 		>
-			<XButton
-				variant="secondary"
-				class="mie-2"
-				:disabled="filterQuery === ''"
-				@click.prevent.stop="clearFiltersAndEmit"
-			>
-				{{ $t('filters.clear') }}
-			</XButton>
-			<XButton
-				variant="primary"
-				@click.prevent.stop="changeAndEmitButton"
-			>
-				{{ $t('filters.showResults')  /* TODO make configurable */ }}
-			</XButton>
+			<template v-if="editRole === 'direct'">
+				<XButton
+					variant="secondary"
+					class="mie-2"
+					:disabled="filterQuery === ''"
+					@click.prevent.stop="clearFiltersAndEmit"
+				>
+					{{ $t('filters.clear') }}
+				</XButton>
+				<XButton
+					variant="primary"
+					@click.prevent.stop="changeAndEmitButton"
+				>
+					{{ $t('filters.showResults') }}
+				</XButton>
+			</template>
+			<template v-if="editRole !== 'direct'">
+				<XButton
+					variant="secondary"
+					class="mie-2"
+					@click.prevent.stop="$emit('close')"
+				>
+					{{ $t('misc.cancel') }}
+				</XButton>
+				<XButton
+					variant="primary"
+					@click.prevent.stop="changeAndEmitButton"
+				>
+					{{ $t('misc.save') }}
+				</XButton>
+			</template>
 		</template>
 	</Card>
 </template>
@@ -77,12 +94,17 @@ const props = withDefaults(defineProps<{
 	changeImmediately?: boolean,
 	filterFromView?: string,
 	showClose?: boolean,
+	// editRole indicates how direct the edit should feel.
+	// Direct means it immediately changes filter results on the current page.
+	// Indirect may delay results.
+	editRole?: 'direct' | 'indirect',
 }>(), {
 	hasTitle: false,
 	hasFooter: true,
 	changeImmediately: false,
 	filterFromView: undefined,
 	showClose: false,
+	editRole: 'direct',
 })
 
 const emit = defineEmits<{
