@@ -549,7 +549,7 @@
     "urgency": {
       "title": "Urgency",
       "header": "Edit \"{project}\" urgency",
-      "description": "Urgency combines task properties with their importance to you as weights, then sorts your most important tasks to the top.",
+      "description": "Urgency sorts your most important tasks to the top. Weigh one or more task properties by their importance to you.",
       "getStarted": "Get started by creating new weights below, then sort your views by Urgency.",
       "property": "Property",
       "filter": "Filter",
