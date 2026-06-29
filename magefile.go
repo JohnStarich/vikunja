@@ -490,7 +490,20 @@ func (Test) LocalDBAndTarget(ctx context.Context, dbType, target string) error {
 			return err
 		}
 		err = waitUntilSuccess(ctx, func() error {
-			return runAndStreamOutput(ctx, mustContainerCommand(), "exec", "db", "psql", "-U", "postgres", "-l")
+			for _, commandArgs := range [][]string{
+				// Speed up tests and improve benchmark stability.
+				// Without these tweaks, high scale tests would hit sporadic large latency spikes.
+				{"exec", "db", "psql", "-U", "postgres", "-d", "vikunjatest", "-c", "ALTER SYSTEM SET fsync = off;"},
+				{"exec", "db", "psql", "-U", "postgres", "-d", "vikunjatest", "-c", "ALTER SYSTEM SET full_page_writes = off;"},
+				{"exec", "db", "psql", "-U", "postgres", "-d", "vikunjatest", "-c", "ALTER SYSTEM SET synchronous_commit = off;"},
+				{"exec", "db", "psql", "-U", "postgres", "-d", "vikunjatest", "-c", "SELECT pg_reload_conf();"},
+			} {
+				err := runAndStreamOutput(ctx, mustContainerCommand(), commandArgs...)
+				if err != nil {
+					return err
+				}
+			}
+			return nil
 		})
 		if err != nil {
 			return err
