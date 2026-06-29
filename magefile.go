@@ -48,6 +48,7 @@ import (
 	"github.com/iancoleman/strcase"
 	"github.com/magefile/mage/mg"
 	pkgerrors "github.com/pkg/errors"
+	"xorm.io/xorm/schemas"
 )
 
 const (
@@ -399,6 +400,106 @@ func (Test) Bench(ctx context.Context) error {
 		"-run", "^$", // Only run benchmarks
 		"-bench", ".", // Run all benchmarks
 		"./...")
+}
+
+func mustContainerCommand() string {
+	var errs []error
+	for _, name := range []string{ // in order of precedence
+		"docker",
+		"podman",
+	} {
+		absolutePath, err := exec.LookPath(name)
+		if err == nil {
+			return absolutePath
+		}
+		errs = append(errs, err)
+	}
+	panic(errors.Join(errs...))
+}
+
+func waitUntilSuccess(ctx context.Context, fn func() error) error {
+	if err := fn(); err == nil {
+		return err
+	}
+	wait := 100 * time.Millisecond
+	for {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-time.After(wait):
+			err := fn()
+			if err == nil {
+				return nil
+			}
+			wait *= 2
+			fmt.Fprintln(os.Stderr, err, "\nNot ready yet, waiting", wait, "...")
+		}
+	}
+}
+
+// BenchLocalDB runs all benchmarks for the given database
+func (Test) BenchLocalDB(ctx context.Context, dbType string) error {
+	mg.Deps(initVars)
+	for key, value := range map[string]string{
+		"VIKUNJA_TESTS_USE_CONFIG":  "1",
+		"VIKUNJA_DATABASE_TYPE":     dbType,
+		"VIKUNJA_DATABASE_USER":     "root",
+		"VIKUNJA_DATABASE_PASSWORD": "vikunjatest",
+		"VIKUNJA_DATABASE_DATABASE": "vikunjatest",
+		"VIKUNJA_DATABASE_SSLMODE":  "disable",
+		"VIKUNJA_DATABASE_HOST":     "localhost",
+		"VIKUNJA_SERVICE_PUBLICURL": "http://127.0.0.1:3456",
+	} {
+		os.Setenv(key, value)
+	}
+	switch schemas.DBType(dbType) {
+	case schemas.SQLITE:
+		os.Setenv("VIKUNJA_DATABASE_TYPE", "sqlite")
+	case schemas.MYSQL:
+		defer runAndStreamOutput(ctx, mustContainerCommand(), "rm", "--force", "db")
+		err := runAndStreamOutput(ctx, mustContainerCommand(), "run",
+			"--detach",
+			"--rm",
+			"--name", "db",
+			"--publish", "3306:3306",
+			"--env", "MYSQL_ROOT_PASSWORD=vikunjatest",
+			"--env", "MYSQL_DATABASE=vikunjatest",
+			"docker.io/library/mysql:8@sha256:da906917ca4ace3ba55538b7c2ee97a9bc865ef14a4b6920b021f0249d603f3d",
+		)
+		if err != nil {
+			return err
+		}
+		err = waitUntilSuccess(ctx, func() error {
+			return runAndStreamOutput(ctx, mustContainerCommand(), "exec", "db", "mysql", "-pvikunjatest", "vikunjatest", "-e", "select 1;")
+		})
+		if err != nil {
+			return err
+		}
+	case schemas.POSTGRES:
+		defer runAndStreamOutput(ctx, mustContainerCommand(), "rm", "--force", "db")
+		err := runAndStreamOutput(ctx, mustContainerCommand(), "run",
+			"--detach",
+			"--rm",
+			"--name", "db",
+			"--publish", "5432:5432",
+			"--env", "POSTGRES_PASSWORD=vikunjatest",
+			"--env", "POSTGRES_DB=vikunjatest",
+			"docker.io/library/postgres:18@sha256:073e7c8b84e2197f94c8083634640ab37105effe1bc853ca4d5fbece3219b0e8",
+		)
+		if err != nil {
+			return err
+		}
+		err = waitUntilSuccess(ctx, func() error {
+			return runAndStreamOutput(ctx, mustContainerCommand(), "exec", "db", "psql", "-U", "postgres", "-l")
+		})
+		if err != nil {
+			return err
+		}
+		os.Setenv("VIKUNJA_DATABASE_USER", "postgres")
+	default:
+		return fmt.Errorf("bench not implemented for DB type: %s", dbType)
+	}
+	return Test{}.Bench(ctx)
 }
 
 // Feature runs the feature tests
