@@ -437,8 +437,8 @@ func waitUntilSuccess(ctx context.Context, fn func() error) error {
 	}
 }
 
-// BenchLocalDB runs all benchmarks for the given database
-func (Test) BenchLocalDB(ctx context.Context, dbType string) error {
+// LocalDBAndTarget configures the given database type as a local container and runs a mage target, then cleans everything up.
+func (Test) LocalDBAndTarget(ctx context.Context, dbType, target string) error {
 	mg.Deps(initVars)
 	for key, value := range map[string]string{
 		"VIKUNJA_TESTS_USE_CONFIG":  "1",
@@ -497,9 +497,9 @@ func (Test) BenchLocalDB(ctx context.Context, dbType string) error {
 		}
 		os.Setenv("VIKUNJA_DATABASE_USER", "postgres")
 	default:
-		return fmt.Errorf("bench not implemented for DB type: %s", dbType)
+		return fmt.Errorf("setup not implemented for DB type: %s", dbType)
 	}
-	return Test{}.Bench(ctx)
+	return runAndStreamOutput(ctx, "mage", target)
 }
 
 // Feature runs the feature tests
