@@ -118,7 +118,7 @@ func dueDateJitter() time.Duration {
 }
 
 func BenchmarkTaskSearch(b *testing.B) {
-	const needle = "llama"
+	const needle = "Lorem Ipsum"
 
 	initBenchmarkConfig()
 	SetupTests()
@@ -165,11 +165,6 @@ func BenchmarkTaskSearch(b *testing.B) {
 		},
 	} {
 		b.Run(tc.description, func(b *testing.B) {
-			if tc.opts.search != "" && config.DatabaseType.GetString() == "sqlite" {
-				b.Skip("Search bench not supported on sqlite")
-			}
-
-			// TODO bench on psql
 			for _, numberOfTasks := range tc.numberOfTasks {
 				b.Run(fmt.Sprintf("tasks=%d", numberOfTasks), func(b *testing.B) {
 					auth := createBenchmarkData(b, needle, 10, numberOfTasks)
