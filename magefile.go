@@ -390,6 +390,17 @@ func Fmt(ctx context.Context) error {
 
 type Test mg.Namespace
 
+// Bench runs all benchmarks
+func (Test) Bench(ctx context.Context) error {
+	mg.Deps(initVars)
+	return runAndStreamOutput(ctx, "go", "test",
+		goDetectVerboseFlag(),
+		"-timeout", "45m",
+		"-run", "^$", // Only run benchmarks
+		"-bench", ".", // Run all benchmarks
+		"./...")
+}
+
 // Feature runs the feature tests
 func (Test) Feature(ctx context.Context) error {
 	mg.Deps(initVars)
@@ -427,7 +438,13 @@ func (Test) Filter(ctx context.Context, filter string) error {
 
 func (Test) All() {
 	mg.Deps(initVars)
-	mg.Deps(Test.Feature, Test.Web, Test.Caldav, Test.E2EApi)
+	mg.Deps(
+		Test.Bench,
+		Test.Caldav,
+		Test.E2EApi,
+		Test.Feature,
+		Test.Web,
+	)
 }
 
 // Caldav runs the CalDAV protocol compliance tests in pkg/caldavtests.
