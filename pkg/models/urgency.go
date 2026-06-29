@@ -118,10 +118,23 @@ func dueDateScoreQuery(quoter quoter, dbType schemas.DBType) (string, error) {
 	return queryer.ClampMax(1, fmt.Sprintf(`(1 << (%s)) / %.2f`, exponent, positiveBitShiftCorrection)), nil
 }
 
+func daysUntil(queryer urgencyQueryer, timestampColumn string) string {
+	const day = 24 * time.Hour
+	return fmt.Sprintf(`cast(%s as %s)/%d`, queryer.SecondsUntil(timestampColumn), queryer.IntegerType(), int(day.Seconds()))
+}
+
 func newUrgencyQueryerForType(quoter quoter, dbType schemas.DBType) (urgencyQueryer, error) {
 	switch dbType {
-	case schemas.MYSQL, schemas.POSTGRES:
-		return standardUrgencyQueryer{quoter: quoter}, nil
+	case schemas.MYSQL:
+		return mysqlUrgencyQueryer{
+			standardUrgencyClampQueryer: standardUrgencyClampQueryer{quoter: quoter},
+			quoter:                      quoter,
+		}, nil
+	case schemas.POSTGRES:
+		return postgresUrgencyQueryer{
+			standardUrgencyClampQueryer: standardUrgencyClampQueryer{quoter: quoter},
+			quoter:                      quoter,
+		}, nil
 	case schemas.SQLITE:
 		return sqliteUrgencyQueryer{quoter: quoter}, nil
 	default:
@@ -130,31 +143,51 @@ func newUrgencyQueryerForType(quoter quoter, dbType schemas.DBType) (urgencyQuer
 }
 
 type urgencyQueryer interface {
+	IntegerType() string
 	ClampMin(minimum int, rawQuery string) string
 	ClampMax(maximum int, rawQuery string) string
 	SecondsUntil(timestampColumn string) string
 }
 
-type standardUrgencyQueryer struct {
+type standardUrgencyClampQueryer struct {
 	quoter quoter
 }
 
-func (s standardUrgencyQueryer) ClampMin(minimum int, rawQuery string) string {
+func (s standardUrgencyClampQueryer) ClampMin(minimum int, rawQuery string) string {
 	return fmt.Sprintf("greatest(%d, %s)", minimum, rawQuery)
 }
 
-func (s standardUrgencyQueryer) ClampMax(maximum int, rawQuery string) string {
+func (s standardUrgencyClampQueryer) ClampMax(maximum int, rawQuery string) string {
 	return fmt.Sprintf("least(%d, %s)", maximum, rawQuery)
 }
 
-func (s standardUrgencyQueryer) SecondsUntil(timestampColumn string) string {
-	// TODO verify which behavior is best across databases. It appears "current_timestamp" may already be in all 3 engines.
-	return fmt.Sprintf(`extract(epoch from %s - localtimestamp)`, s.quoter.Quote(timestampColumn))
+type mysqlUrgencyQueryer struct {
+	standardUrgencyClampQueryer
+	quoter quoter
+}
+
+func (mysqlUrgencyQueryer) IntegerType() string { return "signed" }
+
+func (m mysqlUrgencyQueryer) SecondsUntil(timestampColumn string) string {
+	return fmt.Sprintf(`unix_timestamp(%s - now())`, m.quoter.Quote(timestampColumn))
+}
+
+type postgresUrgencyQueryer struct {
+	standardUrgencyClampQueryer
+	quoter quoter
+}
+
+func (postgresUrgencyQueryer) IntegerType() string { return "int" }
+
+func (p postgresUrgencyQueryer) SecondsUntil(timestampColumn string) string {
+	return fmt.Sprintf(`extract(epoch from %s - localtimestamp)`, p.quoter.Quote(timestampColumn))
 }
 
 type sqliteUrgencyQueryer struct {
 	quoter quoter
 }
+
+func (sqliteUrgencyQueryer) IntegerType() string { return "int" }
 
 func (s sqliteUrgencyQueryer) ClampMin(minimum int, rawQuery string) string {
 	return fmt.Sprintf("max(%d, %s)", minimum, rawQuery)
@@ -167,9 +200,4 @@ func (s sqliteUrgencyQueryer) ClampMax(maximum int, rawQuery string) string {
 func (s sqliteUrgencyQueryer) SecondsUntil(timestampColumn string) string {
 	// TODO verify which behavior is best across databases. It appears "current_timestamp" may already be in all 3 engines.
 	return fmt.Sprintf(`unixepoch(%s) - unixepoch('now')`, s.quoter.Quote(timestampColumn))
-}
-
-func daysUntil(queryer urgencyQueryer, timestampColumn string) string {
-	const day = 24 * time.Hour
-	return fmt.Sprintf(`cast(%s as int)/%d`, queryer.SecondsUntil(timestampColumn), int(day.Seconds()))
 }

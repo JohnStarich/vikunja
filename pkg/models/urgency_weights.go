@@ -101,10 +101,13 @@ func (u UrgencyProperty) normalizedPropertyScore(filter *TaskCollection, quoter 
 }
 
 type UrgencyWeight struct {
-	ProjectID int64           `xorm:"not null unique(weight)"`
-	Property  string          `xorm:"varchar(50) not null unique(weight)"`
-	Filter    *TaskCollection `xorm:"json null unique(weight)"` // Optional reference to a filter. Property must be set to [UrgencyMatchesFilter].
-	Weight    float64         `xorm:"double not null"`
+	ProjectID int64  `xorm:"not null unique(weight)"`
+	Property  string `xorm:"varchar(50) not null unique(weight)"`
+	// Filter is an optional reference to a filter. Property must be set to [UrgencyMatchesFilter].
+	//
+	// NOTE: varchar(512) was chosen to be used in a unique index. At time of writing, JSONB did not work on MySQL and JSON is not indexable.
+	Filter *TaskCollection `xorm:"varchar(512) null unique(weight)"`
+	Weight float64         `xorm:"double not null"`
 }
 
 func (*UrgencyWeight) TableName() string {
