@@ -654,8 +654,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedBy:    user1,
 		ProjectID:    1,
 		RelatedTasks: map[RelationKind][]*Task{},
-		Created:      time.Date(0, time.January, 1, 0, 0, 0, 0, loc),
-		Updated:      time.Date(0, time.January, 1, 0, 0, 0, 0, loc),
+		Created:      time.Unix(1543626724, 0).In(loc),
+		Updated:      time.Unix(1543626724, 0).In(loc),
 		DueDate:      time.Date(9999, time.January, 1, 0, 0, 0, 0, loc),
 	}
 
