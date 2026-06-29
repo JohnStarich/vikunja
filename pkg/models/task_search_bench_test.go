@@ -178,7 +178,7 @@ func BenchmarkTaskSearch(b *testing.B) {
 					require.NoError(b, s.Close())
 					require.NoError(b, err)
 					if tc.pickProject {
-						projects = projects[0:1]
+						projects = projects[len(projects)-2:]
 					}
 
 					for b.Loop() {
