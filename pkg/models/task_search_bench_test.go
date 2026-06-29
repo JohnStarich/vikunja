@@ -127,9 +127,6 @@ func BenchmarkTaskSearch(b *testing.B) {
 		b.Fatalf("load fixtures: %v", err)
 	}
 
-	// Log database configuration
-	b.Logf("Database Type: %s", config.DatabaseType.GetString())
-
 	for _, tc := range []struct {
 		description   string
 		pickProject   bool
@@ -164,7 +161,7 @@ func BenchmarkTaskSearch(b *testing.B) {
 			numberOfTasks: []uint{100, 1000, 10000, 100000},
 		},
 	} {
-		b.Run(tc.description, func(b *testing.B) {
+		b.Run(fmt.Sprintf("%s %s", config.DatabaseType.GetString(), tc.description), func(b *testing.B) {
 			for _, numberOfTasks := range tc.numberOfTasks {
 				b.Run(fmt.Sprintf("tasks=%d", numberOfTasks), func(b *testing.B) {
 					auth := createBenchmarkData(b, needle, 10, numberOfTasks)
