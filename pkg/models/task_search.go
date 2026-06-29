@@ -359,6 +359,7 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 		selectColumns = append(selectColumns, x.Quote("task_positions.position"))
 	}
 	var singleProjectID *int64
+	// TODO Require urgency only be available inside a view? Is it confusing sorting multiple projects without a view can't work for urgency?
 	if len(opts.projectIDs) == 1 {
 		singleProjectID = &opts.projectIDs[0]
 	} else if opts.projectViewID > 0 {

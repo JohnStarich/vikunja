@@ -132,6 +132,7 @@ func BenchmarkTaskSearch(b *testing.B) {
 
 	for _, tc := range []struct {
 		description   string
+		pickProject   bool
 		opts          taskSearchOptions
 		numberOfTasks []uint
 	}{
@@ -149,6 +150,7 @@ func BenchmarkTaskSearch(b *testing.B) {
 		},
 		{
 			description: "sort by urgency",
+			pickProject: true,
 			opts: taskSearchOptions{
 				page:    1,
 				perPage: 50,
@@ -183,6 +185,9 @@ func BenchmarkTaskSearch(b *testing.B) {
 					)
 					require.NoError(b, s.Close())
 					require.NoError(b, err)
+					if tc.pickProject {
+						projects = projects[0:1]
+					}
 
 					for b.Loop() {
 						s := db.NewSession()
