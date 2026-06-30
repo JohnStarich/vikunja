@@ -163,7 +163,7 @@ func BenchmarkTaskSearch(b *testing.B) {
 	} {
 		b.Run(fmt.Sprintf("%s %s", config.DatabaseType.GetString(), tc.description), func(b *testing.B) {
 			for _, numberOfTasks := range tc.numberOfTasks {
-				b.Run(fmt.Sprintf("tasks=%d", numberOfTasks), func(b *testing.B) {
+				b.Run(fmt.Sprintf("%d", numberOfTasks), func(b *testing.B) {
 					auth := createBenchmarkData(b, needle, 10, numberOfTasks)
 
 					// Get all projects for the user
