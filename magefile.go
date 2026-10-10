@@ -618,6 +618,7 @@ func (Test) E2EApi(ctx context.Context) error {
 //   - VIKUNJA_E2E_API_PORT: API port (default: random)
 //   - VIKUNJA_E2E_FRONTEND_PORT: Frontend port (default: random)
 //   - VIKUNJA_E2E_TESTING_TOKEN: Testing token for seed endpoints (default: random)
+//   - VIKUNJA_E2E_SKIP_BUILD: Set to "true" to skip rebuilding the API binary (default: false)
 func (Test) E2E(ctx context.Context, args string) error {
 	mg.Deps(initVars)
 
@@ -642,6 +643,14 @@ func (Test) E2E(ctx context.Context, args string) error {
 	fmt.Printf("  Frontend port: %d\n", frontendPort)
 	fmt.Printf("  Testing token: %s\n", testingToken)
 
+	// Build the API binary (unless skipped)
+	if os.Getenv("VIKUNJA_E2E_SKIP_BUILD") != "true" {
+		fmt.Println("\n--- Building API binary ---")
+		if err := (Build{}).Build(ctx); err != nil {
+			return fmt.Errorf("failed to build API: %w", err)
+		}
+	}
+
 	// Create temp directory for file uploads and rootpath
 	tmpDir, err := os.MkdirTemp("", "vikunja-e2e-*")
 	if err != nil {
@@ -659,7 +668,7 @@ func (Test) E2E(ctx context.Context, args string) error {
 	// Start the API server — all config via env vars, no config file
 	// Uses in-memory SQLite (no DB file on disk)
 	fmt.Println("\n--- Starting API server ---")
-	apiCmd := exec.CommandContext(ctx, "go", "run", ".", "web")
+	apiCmd := exec.CommandContext(ctx, "./vikunja", "web")
 	apiCmd.Env = append(os.Environ(),
 		fmt.Sprintf("VIKUNJA_SERVICE_INTERFACE=:%d", apiPort),
 		fmt.Sprintf("VIKUNJA_SERVICE_PUBLICURL=http://127.0.0.1:%d/", apiPort),
